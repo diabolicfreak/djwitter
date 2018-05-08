@@ -1,1 +1,29 @@
-{{ object_list }}
+{% extends "base.html" %}
+{% block content %}
+  <!-- {% include "tweets/search_form.html" %} -->
+  <div class="col-sm-3">
+    {{request.user}}
+  </div>
+  <div class="col-sm-9">
+    {% include "tweets/form.html" with form=form_content%}
+    <hr />
+    {% for object in object_list %}
+      <div class="media">
+        <div class="media-body">
+          <h5 class="mt-0">{{object.user}}</h5>
+          <p>{{object.content}}</p>
+          <p class="mb-0">{{object.updated }} | <a href="{{ object.get_absolute_url}}">View</a></p>
+        </div>
+      </div>
+      <hr class="w-100" />
+    {% empty %}
+      <div class="col-12 text-center">
+        {% if request.GET.q %}
+          No matches found
+        {% else %}
+          No tweets yet
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% endblock content %}

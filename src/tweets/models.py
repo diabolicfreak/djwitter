@@ -1,4 +1,5 @@
 from django.db import models
+from django.urls import reverse
 from django.conf import settings
 
 class Tweet(models.Model):
@@ -10,3 +11,5 @@ class Tweet(models.Model):
     def __str__(self):
         return self.content
         
+    def get_absolute_url(self):
+        return reverse('tweet:detail', kwargs={'pk': self.pk})

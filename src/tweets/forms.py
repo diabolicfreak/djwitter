@@ -2,10 +2,11 @@ from django import forms
 from .models import Tweet
 
 class TweetFormModel(forms.ModelForm):
+    content = forms.CharField(label='', widget=forms.Textarea(attrs={'placeholder': "Your message", 'class': "form-control"}))
     class Meta:
         model = Tweet
         fields = [
-            'user',
+            # 'user',
             'content',
         ]
 
