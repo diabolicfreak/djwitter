@@ -5,9 +5,12 @@
     {{request.user}}
   </div>
   <div class="col-sm-9">
-    {% include "tweets/form.html" with form=form_content%}
+    {% include "tweets/form.html" with form=form_content form_id="form_id"%}
     <hr />
-    {% for object in object_list %}
+    <div id="tweets_container">
+
+    </div>
+    {% comment %} {% for object in object_list %}
       <div class="media">
         <div class="media-body">
           <h5 class="mt-0">{{object.user}}</h5>
@@ -24,6 +27,100 @@
           No tweets yet
         {% endif %}
       </div>
-    {% endfor %}
+    {% endfor %} {% endcomment %}
   </div>
 {% endblock content %}
+
+{% block scripts %}
+  {{block.super}}
+  <script>
+    $(function(){
+      //Find query string value by name 
+      function getParameterByName(name, url) {
+        if (!url) url = window.location.href;
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+      }
+      //Append tweets to page via ajax
+      function parseTweets(data, prepend=false){
+        let htmlContent = function(value){
+          return `<div class="media">
+            <div class="media-body">
+              <h5 class="mt-0">${value.user.username}</h5>
+              <p>${value.content}</p>
+              <p class="mb-0">${value.timesince} | <a href="#">View</a></p>
+            </div>
+          </div>
+          <hr class="w-100" />`
+        };
+        if(prepend){
+          $('#tweets_container').prepend(htmlContent(data));
+        }else if(!data.length){
+          $('#tweets_container').append("No tweets to display");
+        }else {
+          console.log('htmlContent : '+ JSON.stringify(data));
+          
+          $.each(data, function(key, value){
+            console.log('key '+key+' value '+value.content)
+            $('#tweets_container').append(htmlContent(value));
+          });
+          
+        }
+      }
+      //Get tweets from the backend
+      function fetchTweets(){
+        $.ajax({
+          method: 'GET',
+          url: '/api/tweets',
+          data: {
+            'q': query
+          },
+          success: function(data){
+            parseTweets(data)
+            
+            console.log('data '+ data.length);
+          },
+          error: function(data){
+            console.log("error");
+            console.log(data);
+          }
+        });
+      }
+      query = getParameterByName('q');
+      fetchTweets();
+      
+
+      $('#create_form').submit(function(event){
+        event.preventDefault();
+        $.ajax({
+          method: 'POST',
+          url: '/api/tweets/create',
+          data: $(this).serialize(),
+          success: function(data){
+            parseTweets(data, true);
+            console.log('submit success : '+ JSON.stringify(data));
+          },
+          error: function(data){
+            console.log("error");
+            console.log(data);
+          }
+        })
+        console.log($(this).serialize());
+      });
+
+      $('#create_form textarea').keyup(function(event){
+        console.log(($(this).val()).length);
+        $('.chars_left').text(140-($(this).val()).length)
+        if( (140-($(this).val()).length) < 0 ){
+          event.preventDefault();
+          return;
+        }
+      });
+
+    });
+  </script>
+{% endblock scripts %}
